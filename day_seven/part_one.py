@@ -24,6 +24,9 @@ def get_input_data():
             yield line.strip()
 
 
+all_sizes = []
+
+
 def split_commands(input: Generator[str, None, None]) -> List[Command]:
     commands = []
     # get the initial command
@@ -37,6 +40,9 @@ def split_commands(input: Generator[str, None, None]) -> List[Command]:
         else:
             # is command output
             current_command.output.append(line)
+    # append the last line
+    # thanks /u/nicuveo
+    commands.append(current_command)
     return commands
 
 
@@ -116,6 +122,7 @@ def get_sub_folder_sizes(folder: Folder):
         sub_folder_size += get_file_sizes(sub_folder)
         sub_folder_size += get_sub_folder_sizes(sub_folder)
         sub_folder.size = sub_folder_size
+        all_sizes.append(sub_folder_size)
         size += sub_folder_size
     return size
 
@@ -127,23 +134,22 @@ def calculate_size(file_structure: Folder):
     file_structure.size = files_size + sub_folder_size
 
 
-def sum_folder_and_sub_folders(file_structure: Folder, folder_sizes: List[int]):
-    size = file_structure.size
-    sub_folder_sizes = []
-    for folder in file_structure.sub_folders.values():
-        sub_size, sub_list = sum_folder_and_sub_folders(folder, folder_sizes)
-        sub_folder_sizes = [*sub_folder_sizes, *sub_list, sub_size]
-        size += sub_size
-    return size, sub_folder_sizes
-
-
 commands = split_commands(get_input_data())
 file_structure = generate_file_structure(commands)
 calculate_size(file_structure)
 
 
-total_size, individual_sizes = sum_folder_and_sub_folders(file_structure, [])
-total = sum([x for x in individual_sizes if x <= 100000])
-print(total)
+total = sum([x for x in all_sizes if x <= 100000])
+print(f'Part One result: {total}')
 
+
+total_space = 70000000
+required_space = 30000000
+used_space = file_structure.size
+unused_space = total_space - used_space
+space_needed_to_clear = required_space - unused_space
+
+potential_folders = [x for x in all_sizes if x >= space_needed_to_clear]
+potential_folders.sort()
+print(f'Part Two result: {potential_folders[0]}')
 # print(file_structure)
