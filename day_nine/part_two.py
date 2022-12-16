@@ -39,6 +39,12 @@ def is_on_same_axis(one: Coordinates, two: Coordinates) -> bool:
     return one[0] == two[0] or one[1] == two[1]
 
 
+def pick_direction(a: int, b: int):
+    if a == b:
+        return 0
+    return 1 if a > b else -1
+
+
 class Machine:
     matrix: List[List[MatrixPoint]]
     lengths: List[Coordinates]
@@ -126,47 +132,17 @@ class Machine:
     def assess_tail_position(self, tail_index: int):
         head = self.lengths[tail_index - 1]
         tail = self.lengths[tail_index]
-
-        command_movement = {
-            'U': -1,
-            'D': 1,
-            'L': -1,
-            'R': 1
-        }
-        # make sure tail is within one space of head
-        if head[0] > tail[0] + 1:
-            if is_on_same_axis(head, tail):
-                # head has moved too far right
-                tail = Coordinates(tail[0] + 1, tail[1])
-            else:
-                # head has moved diagnally right
-                tail = Coordinates(head[0] - 1, head[1])
-        if head[0] < tail[0] - 1:
-            if is_on_same_axis(head, tail):
-                # head has moved too far left
-                tail = Coordinates(tail[0] - 1, tail[1])
-            else:
-                # head has moved diagnally left
-                tail = Coordinates(head[0] + 1, head[1])
-
-        if head[1] > tail[1] + 1:
-            if is_on_same_axis(head, tail):
-                # head has moved too far down
-                tail = Coordinates(tail[0], tail[1] + 1)
-            else:
-                # head has moved diagnally up
-                tail = Coordinates(head[0], head[1] - 1)
-
-        if head[1] < tail[1] - 1:
-
-            if is_on_same_axis(head, tail):
-                # head has moved too far up
-                tail = Coordinates(tail[0], tail[1] - 1)
-            else:
-                # head has moved diagnally up, move under it
-                tail = Coordinates(head[0], head[1] + 1)
-
-        self.lengths[tail_index] = tail
+        x, y = tail
+        if (abs(head[0] - tail[0]) > 1):
+            x += 1 if head[0] > tail[0] else -1
+            if abs(head[1] - tail[1]) == 1:
+                y += 1 if head[1] > tail[1] else -1
+        if (abs(head[1] - tail[1]) > 1):
+            y += 1 if head[1] > tail[1] else -1
+            if abs(head[0] - tail[0]) == 1:
+                x += 1 if head[0] > tail[0] else -1
+        new_tail = Coordinates(x, y)
+        self.lengths[tail_index] = new_tail
 
     def submit_command(self, command: Command):
         for _ in range(command[1]):
